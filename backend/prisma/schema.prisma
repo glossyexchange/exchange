@@ -1,0 +1,675 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Information {
+  id         Int      @id @default(autoincrement())
+  enName     String?
+  krName     String?
+  arName     String?
+  enJob      String?
+  krJob      String?
+  arJob      String?
+  enAddress  String?
+  krAddress  String?
+  arAddress  String?
+  phoneOne   String?
+  phoneTwo   String?
+  phoneThree String?
+  logo       String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("information")
+}
+
+model Admin {
+  id                      Int                       @id @default(autoincrement())
+  name                    String
+  phone                   String                    @unique
+  password                String
+  image                   String?
+  role                    String                    @default("admin")
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  tokenVersion            Int                       @default(1)
+  cancelledIncomeTransfer CancelledIncomeTransfer[]
+  cancelledSendTransfer   CancelledSendTransfer[]
+  exchangeAllCurrency     ExchangeAllCurrency[]
+  exchangeUsd             ExchangeUsd[]
+  firstBalance            FirstBalance[]
+  incomeTransfer          IncomeTransfer[]
+  newYear                 NewYear[]
+  notifications           Notification[]
+  paidTransfer            PaidTransfer[]
+  qaid                    Qaid[]
+  sendTransfer            SendTransfer[]
+
+  @@map("admins")
+}
+
+model Notification {
+  id                 Int      @id @default(autoincrement())
+  type               String
+  notificationStatus String   @default("unseen") @map("notification_status")
+  note               String
+  createdAt          DateTime @default(now()) @map("created_at")
+  adminId            Int      @map("admin_id")
+  admin              Admin    @relation(fields: [adminId], references: [id])
+
+  @@map("notifications")
+}
+
+model AccountType {
+  id        Int        @id @default(autoincrement())
+  type      String     @unique
+  createdAt DateTime   @default(now()) @map("created_at")
+  accounts  Accounts[]
+
+  @@map("account_types")
+}
+
+model Accounts {
+  id                         Int                       @id @default(autoincrement())
+  accountId                  Int                       @unique @map("account_id")
+  name                       String
+  phone                      String                    @unique
+  address                    String?
+  createdAt                  DateTime                  @default(now()) @map("created_at")
+  updatedAt                  DateTime                  @updatedAt @map("updated_at")
+  accountTypeId              Int                       @map("account_type_id")
+  accountType                AccountType               @relation(fields: [accountTypeId], references: [id])
+  cancelledIncomeTransfer    CancelledIncomeTransfer[]
+  cancelledReceivedTransfers CancelledSendTransfer[]   @relation("SendTransferReceiver")
+  cancelledSendTransfers     CancelledSendTransfer[]   @relation("SendTransferSender")
+  exchangeAllCurrency        ExchangeAllCurrency[]
+  exchangeUsd                ExchangeUsd[]
+  expense                    Expense[]
+  firstBalance               FirstBalance[]
+  incomeTransfer             IncomeTransfer[]
+  accountDane                Movement[]                @relation("MovementDane")
+  accountDebet               Movement[]                @relation("MovementDebet")
+  accountNewYearDane         NewYear[]                 @relation("NewYearDane")
+  accountNewYearDebet        NewYear[]                 @relation("NewYearDebet")
+  paiIncomeTransfer          PaidTransfer[]            @relation("PaidIncomeTransfer")
+  incomeTransferSender       PaidTransfer[]            @relation("IncomTransferSender")
+  payment                    Payment[]
+  receiverQaid               Qaid[]                    @relation("QaidReceiver")
+  senderQaid                 Qaid[]                    @relation("QaidSender")
+  receipt                    Receipt[]
+  receivedTransfers          SendTransfer[]            @relation("SendTransferReceiver")
+  sentTransfers              SendTransfer[]            @relation("SendTransferSender")
+
+  @@index([accountTypeId])
+  @@map("accounts")
+}
+
+model Address {
+  id                    Int                     @id @default(autoincrement())
+  country               String
+  city                  String                  @unique
+  place                 String
+  address               String
+  phone                 String
+  createdAt             DateTime                @default(now()) @map("created_at")
+  updatedAt             DateTime                @updatedAt @map("updated_at")
+  cancelledSendTransfer CancelledSendTransfer[]
+  sendTransfer          SendTransfer[]
+
+  @@map("address")
+}
+
+model PaidTransferAddress {
+  id           Int            @id @default(autoincrement())
+  companyName  String?        @map("company_name")
+  personName   String         @map("person_name")
+  address      String?
+  phone        String
+  createdAt    DateTime       @default(now()) @map("created_at")
+  paidTransfer PaidTransfer[]
+
+  @@map("paid_transfer_address")
+}
+
+model Supplier {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String   @unique
+  email     String?
+  address   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("supplier")
+}
+
+model Category {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique @map("Name")
+  image       String
+  slug        String        @unique
+  status      String        @default("inactive")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  subCategory SubCategory[]
+
+  @@map("categories")
+}
+
+model SubCategory {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  categoryId Int      @map("category_id")
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@map("sub_categories")
+}
+
+model Currency {
+  id                      Int                       @id @default(autoincrement())
+  currencyId              Int                       @unique @map("currency_id")
+  currencySymbol          String                    @unique @map("currency_symbol")
+  currency                String                    @unique
+  currencyPrice           Decimal?                  @default(0) @map("currency_price")
+  currencyAction          CurrencyAction            @default(MULTIPLY) @map("currency_action")
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  cancelledIncomeTransfer CancelledIncomeTransfer[]
+  cancelledSendTransfer   CancelledSendTransfer[]
+  exchangeAllCurrency     ExchangeAllCurrency[]
+  firstBalance            FirstBalance[]
+  incomeTransfer          IncomeTransfer[]
+  newYear                 NewYear[]
+  paidTransfer            PaidTransfer[]
+  qaid                    Qaid[]
+  sendTransfer            SendTransfer[]
+
+  @@map("currency")
+}
+
+model ExpenseType {
+  id        Int       @id @default(autoincrement())
+  type      String    @unique
+  createdAt DateTime  @default(now()) @map("created_at")
+  expense   Expense[]
+
+  @@map("expense_type")
+}
+
+model VoucherCounter {
+  id          Int    @id @default(autoincrement())
+  tableName   String @map("table_name")
+  fiscalYear  Int    @map("fiscal_year")
+  nextVoucher Int    @default(1) @map("next_voucher")
+  type_id     Int?
+
+  @@unique([tableName, fiscalYear])
+  @@unique([tableName, fiscalYear, type_id])
+  @@map("voucher_counter")
+}
+
+model SendTransfer {
+  id                      Int      @id @default(autoincrement())
+  voucherNo               Int?     @map("voucher_no")
+  fiscalYear              Int?     @map("fiscal_year")
+  createdAt               DateTime @default(now()) @map("created_at")
+  currencyId              Int      @map("currency_id")
+  ComSender_ID            Int      @map("com_sender_id")
+  HmulafromComSender      Decimal? @map("hmula_from_com_sender")
+  ComeReciever_ID         Int      @map("com_receiver_id")
+  HmulafromComReciever    Decimal? @map("hmula_from_com_receiver")
+  HmulatoComReciever      Decimal? @map("hmula_to_com_receiver")
+  RecieverPerson          String?  @map("receiver_person")
+  RecieverAddress         String?  @map("receiver_address")
+  RecieverPhone           String?  @map("receiver_phone")
+  SenderPerson            String?  @map("sender_person")
+  SenderAddress           String?  @map("sender_address")
+  SenderPhone             String?  @map("sender_phone")
+  AmountTransfer          Decimal  @map("amount_transfer")
+  HmulatoComSender        Decimal? @map("hmula_to_com_sender")
+  TotalTransferToReceiver Decimal  @map("total_transfer_to_receiver")
+  Notes                   String   @default("") @map("notes")
+  USER_ID                 Int      @map("user_id")
+  addressID               Int?     @map("address_id")
+  transferTypeId          Int      @map("transfer_type_id")
+  Hmula_ID                Int      @map("hmula_id")
+  typeId                  Int      @map("type_id")
+  type                    String   @map("type")
+  currencyType            String   @map("currency_type")
+  address                 Address? @relation(fields: [addressID], references: [id])
+  receiver                Accounts @relation("SendTransferReceiver", fields: [ComeReciever_ID], references: [accountId])
+  sender                  Accounts @relation("SendTransferSender", fields: [ComSender_ID], references: [accountId])
+  currency                Currency @relation(fields: [currencyId], references: [currencyId])
+  admin                   Admin    @relation(fields: [USER_ID], references: [id])
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([ComSender_ID])
+  @@index([ComeReciever_ID])
+  @@index([currencyId])
+  @@index([createdAt])
+  @@map("send_transfer")
+}
+
+model IncomeTransfer {
+  id                      Int      @id @default(autoincrement())
+  voucherNo               Int?     @map("voucher_no")
+  fiscalYear              Int?     @map("fiscal_year")
+  createdAt               DateTime @default(now()) @map("created_at")
+  currencyId              Int      @map("currency_id")
+  ComSender_ID            Int      @map("com_sender_id")
+  HmulafromComSender      Decimal? @map("hmula_from_com_sender")
+  HmulatoComSender        Decimal? @map("hmula_to_com_sender")
+  RecieverPerson          String?  @map("receiver_person")
+  RecieverAddress         String?  @map("receiver_address")
+  RecieverPhone           String?  @map("receiver_phone")
+  SenderPerson            String?  @map("sender_person")
+  SenderAddress           String?  @map("sender_address")
+  SenderPhone             String?  @map("sender_phone")
+  AmountTransfer          Decimal  @map("amount_transfer")
+  HmulafromReceiver       Decimal? @map("hmula_from_receiver")
+  TotalTransferToReceiver Decimal  @map("total_transfer_to_receiver")
+  Notes                   String   @default("") @map("notes")
+  USER_ID                 Int      @map("user_id")
+  paidId                  Int      @default(0) @map("paid_id")
+  HawalaIncom_ID          Int      @map("hawala_incom_id")
+  Hmula_ID                Int      @map("hmula_id")
+  typeId                  Int      @map("type_id")
+  type                    String   @map("type")
+  currencyType            String   @map("currency_type")
+  sender                  Accounts @relation(fields: [ComSender_ID], references: [accountId])
+  currency                Currency @relation(fields: [currencyId], references: [currencyId])
+  admin                   Admin    @relation(fields: [USER_ID], references: [id])
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([ComSender_ID])
+  @@index([currencyId])
+  @@index([createdAt])
+  @@map("income_transfer")
+}
+
+model CancelledIncomeTransfer {
+  id                      Int      @id @default(autoincrement())
+  voucherNo               Int      @map("voucher_no")
+  fiscalYear              Int      @map("fiscal_year")
+  createdAt               DateTime @default(now()) @map("created_at")
+  currencyId              Int      @map("currency_id")
+  comSenderId             Int      @map("com_sender_id")
+  hmulaFromComSender      Decimal? @map("hmula_from_com_sender")
+  hmulaToComSender        Decimal? @map("hmula_to_com_sender")
+  receiverPerson          String?  @map("receiver_person")
+  receiverAddress         String?  @map("receiver_address")
+  receiverPhone           String?  @map("receiver_phone")
+  senderPerson            String?  @map("sender_person")
+  senderAddress           String?  @map("sender_address")
+  senderPhone             String?  @map("sender_phone")
+  amountTransfer          Decimal  @map("amount_transfer")
+  hmulaFromReceiver       Decimal? @map("hmula_from_receiver")
+  totalTransferToReceiver Decimal  @map("total_transfer_to_receiver")
+  notes                   String   @default("")
+  userId                  Int      @map("user_id")
+  sender                  Accounts @relation(fields: [comSenderId], references: [accountId])
+  currency                Currency @relation(fields: [currencyId], references: [currencyId])
+  admin                   Admin    @relation(fields: [userId], references: [id])
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([comSenderId])
+  @@index([currencyId])
+  @@index([createdAt])
+  @@map("cancelled_income_transfer")
+}
+
+model PaidTransfer {
+  id                      Int                 @id @default(autoincrement())
+  voucherNo               Int                 @map("voucher_no")
+  incomeVoucherNo           Int                 @map("income_voucher_no")
+  fiscalYear              Int                 @map("fiscal_year")
+  createdAt               DateTime            @default(now()) @map("created_at")
+  currencyId              Int                 @map("currency_id")
+  ComSender_ID            Int                 @map("com_sender_id")
+  HmulafromComSender      Decimal?            @map("hmula_from_com_sender")
+  HmulatoComSender        Decimal?            @map("hmula_to_com_sender")
+  RecieverPerson          String?             @map("receiver_person")
+  RecieverAddress         String?             @map("receiver_address")
+  RecieverPhone           String?             @map("receiver_phone")
+  SenderPerson            String?             @map("sender_person")
+  SenderAddress           String?             @map("sender_address")
+  SenderPhone             String?             @map("sender_phone")
+  AmountTransfer          Decimal             @map("amount_transfer")
+  HmulafromReceiver       Decimal?            @map("hmula_from_receiver")
+  TotalTransferToReceiver Decimal             @map("total_transfer_to_receiver")
+  Notes                   String              @default("") @map("notes")
+  USER_ID                 Int                 @map("user_id")
+  paidDate                DateTime            @default(now()) @map("paid_date")
+  paidTransferAddressId   Int                 @map("paid_transfer_address_id")
+  accountId               Int                 @map("account_id")
+  HawalaIncom_ID          Int                 @map("hawala_incom_id")
+  typeId                  Int                 @map("type_id")
+  type                    String              @map("type")
+  currencyType            String              @map("currency_type")
+  account                 Accounts            @relation("PaidIncomeTransfer", fields: [accountId], references: [accountId])
+  sender                  Accounts            @relation("IncomTransferSender", fields: [ComSender_ID], references: [accountId])
+  currency                Currency            @relation(fields: [currencyId], references: [currencyId])
+  paidTransferAddress     PaidTransferAddress @relation(fields: [paidTransferAddressId], references: [id])
+  admin                   Admin               @relation(fields: [USER_ID], references: [id])
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([ComSender_ID])
+  @@index([accountId])
+  @@index([currencyId])
+  @@index([paidDate])
+  @@map("paid_transfer")
+}
+
+model CancelledSendTransfer {
+  id                      Int      @id @default(autoincrement())
+  voucherNo               Int      @map("voucher_no")
+  fiscalYear              Int      @map("fiscal_year")
+  createdAt               DateTime @default(now()) @map("created_at")
+  currencyId              Int      @map("currency_id")
+  comSenderId             Int      @map("com_sender_id")
+  hmulaFromComSender      Decimal? @map("hmula_from_com_sender")
+  comReceiverId           Int      @map("com_receiver_id")
+  hmulaFromComReceiver    Decimal? @map("hmula_from_com_receiver")
+  hmulaToComReceiver      Decimal? @map("hmula_to_com_receiver")
+  receiverPerson          String?  @map("receiver_person")
+  receiverAddress         String?  @map("receiver_address")
+  receiverPhone           String?  @map("receiver_phone")
+  senderPerson            String?  @map("sender_person")
+  senderAddress           String?  @map("sender_address")
+  senderPhone             String?  @map("sender_phone")
+  amountTransfer          Decimal  @map("amount_transfer")
+  hmulaToComSender        Decimal? @map("hmula_to_com_sender")
+  totalTransferToReceiver Decimal  @map("total_transfer_to_receiver")
+  notes                   String   @default("")
+  userId                  Int      @map("user_id")
+  addressId               Int?     @map("address_id")
+  transferTypeId          Int      @map("transfer_type_id")
+  address                 Address? @relation(fields: [addressId], references: [id])
+  receiver                Accounts @relation("SendTransferReceiver", fields: [comReceiverId], references: [accountId])
+  sender                  Accounts @relation("SendTransferSender", fields: [comSenderId], references: [accountId])
+  currency                Currency @relation(fields: [currencyId], references: [currencyId])
+  admin                   Admin    @relation(fields: [userId], references: [id])
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([comSenderId])
+  @@index([comReceiverId])
+  @@index([currencyId])
+  @@index([createdAt])
+  @@map("cancelled_send_transfer")
+}
+
+model ExchangeUsd {
+  id             Int      @id @default(autoincrement())
+  voucherNo      Int?     @map("voucher_no")
+  fiscalYear     Int?     @map("fiscal_year")
+  exchangeTypeId Int      @map("exchange_type_id")
+  exchangeType   String   @map("exchange_type")
+  accountId      Int      @map("account_id")
+  amountUsd      Decimal  @map("amount_usd")
+  price          Decimal
+  amountIqd      Decimal  @map("amount_iqd")
+  createdAt      DateTime @default(now()) @map("created_at")
+  note           String   @default("")
+  adminId        Int      @map("admin_id")
+  ExchangeUsd_ID Int      @map("exchange_usd_id")
+  Hmula_ID       Int      @map("hmula_id")
+  typeId         Int      @map("type_id")
+  type           String   @map("type")
+  currencyType   String   @map("currency_type")
+  account        Accounts @relation(fields: [accountId], references: [accountId])
+  admin          Admin    @relation(fields: [adminId], references: [id])
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([accountId])
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("exchange_usd")
+}
+
+model ExchangeAllCurrency {
+  id             Int      @id @default(autoincrement())
+  voucherNo      Int?     @map("voucher_no")
+  fiscalYear     Int?     @map("fiscal_year")
+  currencyId     Int      @map("currency_id")
+  exchangeTypeId Int      @map("exchange_type_id")
+  exchangeType   String   @map("exchange_type")
+  accountId      Int      @map("account_id")
+  amountUsd      Decimal  @map("amount_usd")
+  price          Decimal
+  amountIqd      Decimal  @map("amount_iqd")
+  createdAt      DateTime @default(now()) @map("created_at")
+  note           String   @default("")
+  adminId        Int      @map("admin_id")
+  ExchangeAll_ID Int      @map("exchange_all_id")
+  Hmula_ID       Int      @map("hmula_id")
+  typeId         Int      @map("type_id")
+  type           String   @map("type")
+  currencyType   String   @map("currency_type")
+  account        Accounts @relation(fields: [accountId], references: [accountId])
+  admin          Admin    @relation(fields: [adminId], references: [id])
+  currency       Currency @relation(fields: [currencyId], references: [currencyId])
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([currencyId])
+  @@index([accountId])
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("exchange_all_currency")
+}
+
+model Payment {
+  id            Int      @id @default(autoincrement())
+  voucherNo     Int?     @map("voucher_no")
+  fiscalYear    Int?     @map("fiscal_year")
+  currencyId    Int      @map("currency_id")
+  currencyType  String   @map("currency_type")
+  accountId     Int      @map("account_id")
+  payer         String?
+  payerPhone    String?  @map("payer_phone")
+  totalAmount   Decimal  @map("total_amount")
+  note          String   @default("")
+  createdAt     DateTime @default(now()) @map("created_at")
+  paymentTypeId Int      @default(0) @map("payment_type_id")
+  debtorId      Int      @map("debtor_id")
+  daneId        Int      @map("dane_id")
+  type          String   @map("type")
+   typeId                  Int                 @map("type_id")
+  account       Accounts @relation(fields: [accountId], references: [accountId])
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([accountId])
+  @@index([currencyId])
+  @@index([createdAt])
+  @@map("payment")
+}
+
+model Receipt {
+  id            Int      @id @default(autoincrement())
+  voucherNo     Int?     @map("voucher_no")
+  fiscalYear    Int?     @map("fiscal_year")
+  currencyId    Int      @map("currency_id")
+  currencyType  String   @map("currency_type")
+  accountId     Int      @map("account_id")
+  totalAmount   Decimal  @map("total_amount")
+  note          String   @default("")
+  createdAt     DateTime @default(now()) @map("created_at")
+  payer         String?
+  payerPhone    String?  @map("payer_phone")
+  receiptTypeId Int      @default(0) @map("receipt_type_id")
+  debtorId      Int      @map("debtor_id")
+  daneId        Int      @map("dane_id")
+  type          String   @map("type")
+   typeId                  Int                 @map("type_id")
+  account       Accounts @relation(fields: [accountId], references: [accountId])
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([accountId])
+  @@index([currencyId])
+  @@index([createdAt])
+  @@map("receipt")
+}
+
+model Qaid {
+  id              Int      @id @default(autoincrement())
+  voucherNo       Int?     @map("voucher_no")
+  fiscalYear      Int?     @map("fiscal_year")
+  createdAt       DateTime @default(now()) @map("created_at")
+  currencyId      Int      @map("currency_id")
+  ComSender_ID    Int      @map("com_sender_id")
+  ComeReciever_ID Int      @map("com_receiver_id")
+  AmountTransfer  Decimal  @map("amount_transfer")
+  Notes           String   @default("") @map("notes")
+  USER_ID         Int      @map("user_id")
+  typeId          Int      @map("type_id")
+  type            String   @map("type")
+  receiver        Accounts @relation("QaidReceiver", fields: [ComeReciever_ID], references: [accountId])
+  sender          Accounts @relation("QaidSender", fields: [ComSender_ID], references: [accountId])
+  currency        Currency @relation(fields: [currencyId], references: [currencyId])
+  admin           Admin    @relation(fields: [USER_ID], references: [id])
+
+  @@unique([fiscalYear, voucherNo, typeId])
+  @@index([ComSender_ID])
+  @@index([ComeReciever_ID])
+  @@index([currencyId])
+  @@index([createdAt])
+  @@map("qaid")
+}
+
+model Expense {
+  id            Int         @id @default(autoincrement())
+  voucherNo     Int         @map("voucher_no")
+  fiscalYear    Int         @map("fiscal_year")
+  currencyId    Int         @map("currency_id")
+  currencyType  String      @map("currency_type")
+  accountId     Int         @map("account_id")
+  totalAmount   Decimal     @map("total_amount")
+  expenseTypeId Int         @map("expense_type_id")
+  note          String      @default("")
+  checkStatus   String      @default("") @map("check_status")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  account       Accounts    @relation(fields: [accountId], references: [accountId])
+  expenseType   ExpenseType @relation(fields: [expenseTypeId], references: [id])
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([accountId])
+  @@index([expenseTypeId])
+  @@index([currencyId])
+  @@index([createdAt])
+  @@map("expense")
+}
+
+model Contract {
+  id           Int      @id @default(autoincrement())
+  voucherNo    Int      @map("voucher_no")
+  fiscalYear   Int      @map("fiscal_year")
+  contractNo   Int?     @map("contract_no")
+  currencyId   Int      @map("currency_id")
+  currencyType String   @map("currency_type")
+  name         String
+  phone        String?
+  info         String?
+  totalAmount  Decimal  @map("total_amount")
+  note         String   @default("")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@unique([fiscalYear, voucherNo])
+  @@index([currencyId])
+  @@index([createdAt])
+  @@map("contract")
+}
+
+model FirstBalance {
+  id            Int      @id @default(autoincrement())
+  currencyId    Int      @map("currency_id")
+  balanceTypeId Int      @map("balance_type_id")
+  balanceType   String   @map("balance_type")
+  voucherNo     Int      @map("voucher_no")
+  fiscalYear    Int      @map("fiscal_year")
+  createdAt     DateTime @default(now()) @map("created_at")
+  accountId     Int      @map("account_id")
+  balance       Decimal
+  note          String   @default("")
+  USER_ID       Int      @map("user_id")
+  type          String   @map("type")
+  typeId        Int      @map("type_id")
+  account       Accounts @relation(fields: [accountId], references: [accountId])
+  currency      Currency @relation(fields: [currencyId], references: [currencyId])
+  admin         Admin    @relation(fields: [USER_ID], references: [id])
+  newYear       NewYear?
+
+  @@unique([fiscalYear, voucherNo, typeId])
+  @@index([accountId])
+  @@index([currencyId])
+  @@index([createdAt])
+  @@map("first_balance")
+}
+
+model NewYear {
+  fiscalYear          Int           @map("fiscal_year")
+  id                  Int           @default(autoincrement())
+  type                String
+  voucherNo           Int           @map("voucher_no")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  debtorId            Int           @map("debtor_id")
+  amountTaking        Decimal       @map("amount_taking")
+  creditorId          Int           @map("creditor_id")
+  amountPay           Decimal       @map("amount_pay")
+  currencyId          Int           @map("currency_id")
+  note                String        @default("")
+  typeId              Int           @map("type_id")
+  USER_ID             Int           @map("user_id")
+  firstBalanceId      Int?          @unique
+  accountNewYearDane  Accounts      @relation("NewYearDane", fields: [creditorId], references: [accountId])
+  currency            Currency      @relation(fields: [currencyId], references: [currencyId])
+  accountNewYearDebet Accounts      @relation("NewYearDebet", fields: [debtorId], references: [accountId])
+  firstBalance        FirstBalance? @relation(fields: [firstBalanceId], references: [id])
+  admin               Admin         @relation(fields: [USER_ID], references: [id])
+
+  @@id([fiscalYear, id])
+  @@unique([fiscalYear, voucherNo, typeId])
+  @@index([debtorId, fiscalYear])
+  @@index([creditorId, fiscalYear])
+  @@index([fiscalYear, voucherNo])
+  @@index([createdAt])
+  @@map("new_year")
+}
+
+model Movement {
+  fiscalYear   Int      @map("fiscal_year")
+  id           Int      @default(autoincrement())
+  type         String
+  voucherNo    Int      @map("voucher_no")
+  createdAt    DateTime @default(now()) @map("created_at")
+  debtorId     Int      @map("debtor_id")
+  amountTaking Decimal  @map("amount_taking")
+  creditorId   Int      @map("creditor_id")
+  amountPay    Decimal  @map("amount_pay")
+  currencyId   Int      @map("currency_id")
+  note         String   @default("")
+  typeId       Int      @map("type_id")
+  receiptNo    Int      @map("receipt_no")
+  accountDane  Accounts @relation("MovementDane", fields: [creditorId], references: [accountId])
+  accountDebet Accounts @relation("MovementDebet", fields: [debtorId], references: [accountId])
+
+  @@id([fiscalYear, id])
+  @@unique([fiscalYear, voucherNo, type])
+  @@index([debtorId, fiscalYear])
+  @@index([creditorId, fiscalYear])
+  @@index([fiscalYear, voucherNo])
+  @@index([createdAt])
+  @@map("movement")
+}
+
+enum CurrencyAction {
+  MULTIPLY
+  DIVIDE
+}
+
+enum OrderType {
+  CASH
+  INSTALLMENT
+}

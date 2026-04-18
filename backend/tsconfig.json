@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "CommonJS",
+    "outDir": "./dist", // Output compiled files to 'dist'
+    "rootDir": "./src", // Your source files will be under 'src'
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "typeRoots": ["src/types", "node_modules/@types"],
+    "types": ["node", "express"]
+
+  },
+  "include": ["src/**/*.ts", "prisma.config.ts"], // Include all .ts files in the 'src' folder
+  "exclude": ["node_modules"] // Exclude node_modules
+}

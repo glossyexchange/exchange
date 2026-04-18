@@ -1,0 +1,24 @@
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+
+/* @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;700&display=swap'); */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Noto Kufi Arabic', sans-serif;
+  font-size: 14px;
+  font-weight: 200;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  color: #333;
+  @media (max-width: 1200px) {
+    font-size: 14px;
+  }
+}
+
+.table-header-sm { font-size: 0.875rem !important; }
